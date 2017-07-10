@@ -1,15 +1,19 @@
 package id.ihsan.popmovie;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import id.ihsan.popmovie.adapters.MoviesAdapter;
+import id.ihsan.popmovie.helpers.ItemClickSupport;
 import id.ihsan.popmovie.helpers.MoviesType;
 import id.ihsan.popmovie.helpers.ViewHelper;
+import id.ihsan.popmovie.models.Movie;
 import id.ihsan.popmovie.models.Movies;
 import id.ihsan.popmovie.networks.RestClient;
 import rx.Observable;
@@ -59,7 +63,17 @@ public class MainActivity extends AppBaseActivity {
 
     @Override
     public void initListeners() {
-
+        ItemClickSupport.addTo(gridMovies).setOnItemClickListener(new ItemClickSupport.OnItemClickListener() {
+            @Override
+            public void onItemClicked(RecyclerView recyclerView, int position, View v) {
+                Movie movie = adapter.getMovie(position);
+                if (movie != null) {
+                    Intent intent = new Intent(MainActivity.this, MovieDetailActivity.class);
+                    intent.putExtra("movie", movie);
+                    startActivity(intent);
+                }
+            }
+        });
     }
 
     @Override

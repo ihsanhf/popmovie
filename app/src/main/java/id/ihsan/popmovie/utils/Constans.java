@@ -18,6 +18,7 @@ public class Constans {
         static final String MOVIE = "movie/";
         public final static String MOVIE_POPULAR = MOVIE + "popular";
         public final static String MOVIE_TOP = MOVIE + "top_rated";
+        public final static String MOVIE_DETAIL = MOVIE + "{movie_id}";
     }
 
     private static native String url();

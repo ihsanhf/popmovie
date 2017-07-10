@@ -9,8 +9,9 @@ import java.util.concurrent.TimeUnit;
 
 import id.ihsan.popmovie.MovieApplication;
 import id.ihsan.popmovie.R;
-import id.ihsan.popmovie.utils.Constans;
+import id.ihsan.popmovie.models.MovieDetail;
 import id.ihsan.popmovie.models.Movies;
+import id.ihsan.popmovie.utils.Constans;
 import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -22,6 +23,7 @@ import retrofit2.adapter.rxjava.HttpException;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
+import retrofit2.http.Path;
 import rx.Observable;
 import rx.schedulers.Schedulers;
 
@@ -93,5 +95,8 @@ public class RestClient {
 
         @GET(Constans.ApiUrl.MOVIE_TOP)
         Observable<Movies> getTopRatedMovie();
+
+        @GET(Constans.ApiUrl.MOVIE_DETAIL)
+        Observable<MovieDetail> getMovieDetail(@Path("movie_id") long movieId);
     }
 }

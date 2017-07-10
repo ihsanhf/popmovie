@@ -28,12 +28,14 @@
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:padding="16dp">
 
             <id.ihsan.popmovie.widgets.MovieImageView
                 android:id="@+id/img_movie"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
                 android:contentDescription="@null" />
 
             <TextView
@@ -41,7 +43,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
-                android:layout_toEndOf="@+id/img_movie" />
+                android:layout_toEndOf="@+id/img_movie"
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/txt_time"
@@ -49,22 +53,29 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/txt_release_year"
                 android:layout_marginBottom="8dp"
-                android:layout_toEndOf="@+id/img_movie" />
+                android:layout_toEndOf="@+id/img_movie"
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/txt_rating"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/txt_time"
-                android:layout_marginBottom="8dp"
                 android:layout_toEndOf="@+id/img_movie" />
         </RelativeLayout>
+
+        <TextView
+            android:id="@+id/txt_overview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp" />
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginBottom="16dp"
-            android:layout_marginTop="16dp"
+            android:layout_margin="16dp"
             android:background="@android:color/darker_gray" />
 
         <android.support.v7.widget.RecyclerView

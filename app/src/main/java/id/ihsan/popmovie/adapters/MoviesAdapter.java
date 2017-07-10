@@ -44,6 +44,10 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieHolde
         notifyDataSetChanged();
     }
 
+    public Movie getMovie(int position) {
+        return movies.get(position);
+    }
+
     @Override
     public MovieHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.view_item_movie, parent, false);
