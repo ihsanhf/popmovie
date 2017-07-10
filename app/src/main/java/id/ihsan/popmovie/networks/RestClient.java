@@ -7,7 +7,6 @@ import android.util.Log;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import id.ihsan.popmovie.MovieApplication;
 import id.ihsan.popmovie.R;
 import id.ihsan.popmovie.models.MovieDetail;
 import id.ihsan.popmovie.models.Movies;
@@ -28,10 +27,9 @@ import rx.Observable;
 import rx.schedulers.Schedulers;
 
 /**
- * Created by Ihsan Helmi Faisal
- * on 7/10/2017.
+ * @author Ihsan Helmi Faisal <ihsan.helmi@ovo.id>
+ * @since 2017.10.07
  */
-
 public class RestClient {
 
     private static final String TAG = RestClient.class.getSimpleName();
@@ -46,7 +44,7 @@ public class RestClient {
                     @Override
                     public Response intercept(Chain chain) throws IOException {
                         Request request = chain.request();
-                        HttpUrl url = request.url().newBuilder().addQueryParameter("api_key", MovieApplication.getInstance().apiKey()).build();
+                        HttpUrl url = request.url().newBuilder().addQueryParameter("api_key", Constans.API_KEY).build();
                         request = request.newBuilder().url(url).build();
                         return chain.proceed(request);
                     }
