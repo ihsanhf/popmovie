@@ -2,6 +2,7 @@ package id.ihsan.popmovie;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -19,6 +20,7 @@ import id.ihsan.popmovie.models.MovieDetail;
 import id.ihsan.popmovie.networks.RestClient;
 import id.ihsan.popmovie.utils.Constans;
 import id.ihsan.popmovie.widgets.MovieImageView;
+import id.ihsan.popmovie.widgets.MovieTitleImageView;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -30,8 +32,10 @@ import rx.android.schedulers.AndroidSchedulers;
 public class MovieDetailActivity extends AppBaseActivity {
 
     private Toolbar toolbar;
+    private CollapsingToolbarLayout collapsingToolbarLayout;
     private MovieImageView imgMovie;
-    private TextView txtRelease, txtTime, txtRating, txtOverview;
+    private MovieTitleImageView imgMovieTitle;
+    private TextView txtTitle, txtRelease, txtTime, txtRating, txtOverview;
 
     private Movie movie;
 
@@ -59,7 +63,10 @@ public class MovieDetailActivity extends AppBaseActivity {
     @Override
     public void findViews() {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
+        collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar);
+        imgMovieTitle = (MovieTitleImageView) findViewById(R.id.img_title);
         imgMovie = (MovieImageView) findViewById(R.id.img_movie);
+        txtTitle = (TextView) findViewById(R.id.txt_title);
         txtRelease = (TextView) findViewById(R.id.txt_release_year);
         txtTime = (TextView) findViewById(R.id.txt_time);
         txtRating = (TextView) findViewById(R.id.txt_rating);
@@ -68,11 +75,17 @@ public class MovieDetailActivity extends AppBaseActivity {
 
     @Override
     public void initViews() {
-        setSupportActionBar(toolbar);
+        setupToolbar(toolbar, getString(R.string.movie_detail_title));
+        collapsingToolbarLayout.setTitle(getString(R.string.movie_detail_title));
+        collapsingToolbarLayout.setExpandedTitleColor(getResources().getColor(android.R.color.transparent));
+
         if (movie != null) {
-            setupToolbar(toolbar, movie.getTitle());
             String urlImage = Constans.BASE_IMAGE_URL + "w342" + movie.getPosterPath();
+            String urlImage2 = Constans.BASE_IMAGE_URL + "w500" + movie.getBackdropPath();
             Picasso.with(this).load(urlImage).into(imgMovie);
+            Picasso.with(this).load(urlImage2).into(imgMovieTitle);
+
+            txtTitle.setText(movie.getTitle());
             txtRelease.setText(Formatter.parseYear(movie.getReleaseDate()));
             txtRating.setText(String.format(Locale.US, "%s / 10", Formatter.formatDoubleToString(movie.getVoteAverage())));
             txtOverview.setText(movie.getOverview());

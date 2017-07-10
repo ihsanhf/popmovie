@@ -6,4 +6,6 @@
     <string name="progress_dialog_message">Please wait&#8230;</string>
     <string name="no_internet_connection">No internet connection</string>
     <string name="internal_server_error">Server error</string>
+
+    <string name="movie_detail_title">Movie Detail</string>
 </resources>

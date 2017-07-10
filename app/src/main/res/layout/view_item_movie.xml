@@ -18,6 +18,6 @@
         android:layout_alignParentBottom="true"
         android:background="@color/white_a90"
         android:gravity="center"
-        android:paddingBottom="8dp"
-        android:paddingTop="8dp" />
+        android:paddingBottom="@dimen/space"
+        android:paddingTop="@dimen/space" />
 </RelativeLayout>
