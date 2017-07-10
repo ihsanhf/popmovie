@@ -1,4 +1,4 @@
-package id.ihsan.popmovie.helpers;
+package id.ihsan.popmovie.utils;
 
 /**
  * Created by Ihsan Helmi Faisal
@@ -20,7 +20,7 @@ public class Constans {
         public final static String MOVIE_TOP = MOVIE + "top_rated";
     }
 
-    public static native String url();
+    private static native String url();
 
-    public static native String urlImage();
+    private static native String urlImage();
 }

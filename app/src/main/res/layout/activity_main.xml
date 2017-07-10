@@ -20,6 +20,18 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_main" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/view_grid_movies"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layoutManager="GridLayoutManager"
+            tools:listitem="@layout/view_item_movie" />
+
+    </LinearLayout>
 </android.support.design.widget.CoordinatorLayout>

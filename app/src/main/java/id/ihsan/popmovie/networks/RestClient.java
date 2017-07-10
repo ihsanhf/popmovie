@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import id.ihsan.popmovie.MovieApplication;
 import id.ihsan.popmovie.R;
-import id.ihsan.popmovie.helpers.Constans;
+import id.ihsan.popmovie.utils.Constans;
 import id.ihsan.popmovie.models.Movies;
 import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
@@ -22,7 +22,6 @@ import retrofit2.adapter.rxjava.HttpException;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
-import retrofit2.http.Query;
 import rx.Observable;
 import rx.schedulers.Schedulers;
 
