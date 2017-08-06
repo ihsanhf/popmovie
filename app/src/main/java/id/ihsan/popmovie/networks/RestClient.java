@@ -23,6 +23,7 @@ import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 import rx.Observable;
 import rx.schedulers.Schedulers;
 
@@ -95,6 +96,6 @@ public class RestClient {
         Observable<Movies> getTopRatedMovie();
 
         @GET(Constans.ApiUrl.MOVIE_DETAIL)
-        Observable<MovieDetail> getMovieDetail(@Path("movie_id") long movieId);
+        Observable<MovieDetail> getMovieDetail(@Path("movie_id") long movieId, @Query("append_to_response") String response);
     }
 }

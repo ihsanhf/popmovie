@@ -84,6 +84,9 @@ public class MovieDetail implements Parcelable {
     @SerializedName("status")
     private String status;
 
+    @SerializedName("videos")
+    private Videos mVideos;
+
     public void setOriginalLanguage(String originalLanguage) {
         this.originalLanguage = originalLanguage;
     }
@@ -284,6 +287,14 @@ public class MovieDetail implements Parcelable {
         return status;
     }
 
+    public Videos getmVideos() {
+        return mVideos;
+    }
+
+    public void setmVideos(Videos mVideos) {
+        this.mVideos = mVideos;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -316,6 +327,7 @@ public class MovieDetail implements Parcelable {
         dest.writeByte(this.adult ? (byte) 1 : (byte) 0);
         dest.writeString(this.homepage);
         dest.writeString(this.status);
+        dest.writeValue(this.mVideos);
     }
 
     public MovieDetail() {
@@ -347,6 +359,7 @@ public class MovieDetail implements Parcelable {
         this.adult = in.readByte() != 0;
         this.homepage = in.readString();
         this.status = in.readString();
+        this.mVideos = (Videos) in.readValue(Videos.class.getClassLoader());
     }
 
     public static final Parcelable.Creator<MovieDetail> CREATOR = new Parcelable.Creator<MovieDetail>() {

@@ -5,5 +5,5 @@ package id.ihsan.popmovie.helpers;
  * @since 2017.10.07
  */
 public enum MoviesType {
-    ALL, POPULAR, TOP_RATED
+    FAVORITES, POPULAR, TOP_RATED
 }

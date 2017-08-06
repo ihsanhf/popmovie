@@ -1,22 +1,31 @@
 package id.ihsan.popmovie;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
 import java.util.Locale;
 
+import id.ihsan.popmovie.adapters.TrailersAdapter;
 import id.ihsan.popmovie.helpers.Formatter;
+import id.ihsan.popmovie.helpers.ItemClickSupport;
 import id.ihsan.popmovie.helpers.ViewHelper;
 import id.ihsan.popmovie.models.Movie;
 import id.ihsan.popmovie.models.MovieDetail;
+import id.ihsan.popmovie.models.Video;
+import id.ihsan.popmovie.models.Videos;
 import id.ihsan.popmovie.networks.RestClient;
 import id.ihsan.popmovie.utils.Constans;
 import id.ihsan.popmovie.widgets.MovieImageView;
@@ -36,7 +45,9 @@ public class MovieDetailActivity extends AppBaseActivity {
     private MovieImageView imgMovie;
     private MovieTitleImageView imgMovieTitle;
     private TextView txtTitle, txtRelease, txtTime, txtRating, txtOverview;
+    private RecyclerView listTrailers;
 
+    private TrailersAdapter adapter;
     private Movie movie;
 
     @Override
@@ -71,6 +82,7 @@ public class MovieDetailActivity extends AppBaseActivity {
         txtTime = (TextView) findViewById(R.id.txt_time);
         txtRating = (TextView) findViewById(R.id.txt_rating);
         txtOverview = (TextView) findViewById(R.id.txt_overview);
+        listTrailers = (RecyclerView) findViewById(R.id.list_trailers);
     }
 
     @Override
@@ -78,6 +90,12 @@ public class MovieDetailActivity extends AppBaseActivity {
         setupToolbar(toolbar, getString(R.string.movie_detail_title));
         collapsingToolbarLayout.setTitle(getString(R.string.movie_detail_title));
         collapsingToolbarLayout.setExpandedTitleColor(getResources().getColor(android.R.color.transparent));
+
+        adapter = new TrailersAdapter();
+
+        LinearLayoutManager manager = new LinearLayoutManager(this);
+        listTrailers.setLayoutManager(manager);
+        listTrailers.setAdapter(adapter);
 
         if (movie != null) {
             String urlImage = Constans.BASE_IMAGE_URL + "w342" + movie.getPosterPath();
@@ -94,7 +112,18 @@ public class MovieDetailActivity extends AppBaseActivity {
 
     @Override
     public void initListeners() {
-
+        ItemClickSupport.addTo(listTrailers).setOnItemClickListener(new ItemClickSupport.OnItemClickListener() {
+            @Override
+            public void onItemClicked(RecyclerView recyclerView, int position, View v) {
+                Video video = adapter.getVideo(position);
+                if (video != null) {
+                    String url = "https://www.youtube.com/watch?v=" + video.getKey();
+                    Intent i = new Intent(Intent.ACTION_VIEW);
+                    i.setData(Uri.parse(url));
+                    startActivity(i);
+                }
+            }
+        });
     }
 
     @Override
@@ -129,7 +158,7 @@ public class MovieDetailActivity extends AppBaseActivity {
     private void requestMovieDetail(long movieId) {
         showDialog();
         RestClient.ApiService apiService = RestClient.getClient();
-        Observable<MovieDetail> call = apiService.getMovieDetail(movieId);
+        Observable<MovieDetail> call = apiService.getMovieDetail(movieId, "videos");
 
         call.observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<MovieDetail>() {
@@ -149,6 +178,9 @@ public class MovieDetailActivity extends AppBaseActivity {
                         dismissDialog();
                         if (response != null) {
                             txtTime.setText(String.format(Locale.US, "%d mins", response.getRuntime()));
+                            Videos videos = response.getmVideos();
+                            if (videos != null)
+                                adapter.setMovies(videos.getmVideos());
                         }
                     }
                 });

@@ -93,7 +93,7 @@ public class MainActivity extends AppBaseActivity {
             } else if (itemTitle.equals(getString(R.string.action_settings_top))) {
                 retrieveMovies(MoviesType.TOP_RATED);
             } else {
-                retrieveMovies(MoviesType.ALL);
+                retrieveFavoriteMovies();
             }
             return true;
         }
@@ -101,17 +101,16 @@ public class MainActivity extends AppBaseActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    private void retrieveFavoriteMovies() {
+        // TODO : Retrieve Fav Movies from DB
+    }
+
     private void retrieveMovies(final MoviesType moviesType) {
         showDialog();
         RestClient.ApiService apiService = RestClient.getClient();
-        Observable<Movies> call;
-        if (moviesType == MoviesType.POPULAR) {
-            call = apiService.getPopularMovie();
-        } else if (moviesType == MoviesType.TOP_RATED) {
+        Observable<Movies> call = apiService.getPopularMovie();
+        if (moviesType == MoviesType.TOP_RATED) {
             call = apiService.getTopRatedMovie();
-        } else {
-            // TODO : Change to all movies
-            call = apiService.getPopularMovie();
         }
 
         call.observeOn(AndroidSchedulers.mainThread())
