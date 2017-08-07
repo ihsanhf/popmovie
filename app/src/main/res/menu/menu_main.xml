@@ -2,9 +2,22 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="id.ihsan.popmovie.MainActivity">
+
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/action_popular"
         android:orderInCategory="100"
         android:title="@string/action_settings_popular"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_top"
+        android:orderInCategory="100"
+        android:title="@string/action_settings_top"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_favorite"
+        android:orderInCategory="100"
+        android:title="@string/action_settings_favorite"
         app:showAsAction="never" />
 </menu>

@@ -1,6 +1,7 @@
 package id.ihsan.popmovie;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -9,8 +10,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.google.gson.Gson;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import id.ihsan.popmovie.adapters.MoviesAdapter;
 import id.ihsan.popmovie.helpers.ItemClickSupport;
+import id.ihsan.popmovie.helpers.MovieContract;
 import id.ihsan.popmovie.helpers.MoviesType;
 import id.ihsan.popmovie.helpers.ViewHelper;
 import id.ihsan.popmovie.models.Movie;
@@ -27,10 +34,11 @@ import rx.android.schedulers.AndroidSchedulers;
 public class MainActivity extends AppBaseActivity {
 
     private Toolbar toolbar;
-    private Menu menu;
     private RecyclerView gridMovies;
 
     private MoviesAdapter adapter;
+
+    private MoviesType moviesType = MoviesType.POPULAR;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,8 +48,6 @@ public class MainActivity extends AppBaseActivity {
         findViews();
         initViews();
         initListeners();
-
-        retrieveMovies(MoviesType.POPULAR);
     }
 
     @Override
@@ -77,39 +83,77 @@ public class MainActivity extends AppBaseActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (moviesType == MoviesType.POPULAR) {
+            retrieveMovies(MoviesType.POPULAR);
+        } else if (moviesType == MoviesType.TOP_RATED) {
+            retrieveMovies(MoviesType.TOP_RATED);
+        } else if (moviesType == MoviesType.FAVORITES) {
+            retrieveFavoriteMovies();
+            moviesType = MoviesType.FAVORITES;
+            invalidateOptionsMenu();
+        }
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        this.menu = menu;
+
+        menu.findItem(R.id.action_popular).setVisible(true);
+        menu.findItem(R.id.action_top).setVisible(true);
+        menu.findItem(R.id.action_favorite).setVisible(true);
+
+        if (moviesType == MoviesType.POPULAR) {
+            menu.findItem(R.id.action_popular).setVisible(false);
+            toolbar.setTitle(R.string.action_settings_popular);
+        } else if (moviesType == MoviesType.TOP_RATED) {
+            menu.findItem(R.id.action_top).setVisible(false);
+            toolbar.setTitle(R.string.action_settings_top);
+        } else {
+            menu.findItem(R.id.action_favorite).setVisible(false);
+            toolbar.setTitle(R.string.action_settings_favorite);
+        }
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            String itemTitle = item.getTitle().toString();
-            if (itemTitle.equals(getString(R.string.action_settings_popular))) {
-                retrieveMovies(MoviesType.POPULAR);
-            } else if (itemTitle.equals(getString(R.string.action_settings_top))) {
-                retrieveMovies(MoviesType.TOP_RATED);
-            } else {
-                retrieveFavoriteMovies();
-            }
-            return true;
+        if (id == R.id.action_popular) {
+            retrieveMovies(MoviesType.POPULAR);
+        } else if (id == R.id.action_top) {
+            retrieveMovies(MoviesType.TOP_RATED);
+        } else if (id == R.id.action_favorite) {
+            retrieveFavoriteMovies();
+            moviesType = MoviesType.FAVORITES;
+            invalidateOptionsMenu();
         }
 
         return super.onOptionsItemSelected(item);
     }
 
     private void retrieveFavoriteMovies() {
-        // TODO : Retrieve Fav Movies from DB
+        List<Movie> movies = new ArrayList<>();
+        Cursor c = getContentResolver().query(MovieContract.MovieEntry.CONTENT_URI, new String[]{MovieContract.MovieEntry._ID, MovieContract.MovieEntry.COLUMN_MOVIE},
+                null, null, null);
+        if (c != null && c.moveToFirst()) {
+            do {
+                String json = c.getString(c.getColumnIndex(MovieContract.MovieEntry.COLUMN_MOVIE));
+                Gson gson = new Gson();
+                Movie movie = gson.fromJson(json, Movie.class);
+                movies.add(movie);
+            } while (c.moveToNext());
+        }
+        adapter.setMovies(movies);
     }
 
-    private void retrieveMovies(final MoviesType moviesType) {
+    private void retrieveMovies(final MoviesType type) {
         showDialog();
         RestClient.ApiService apiService = RestClient.getClient();
         Observable<Movies> call = apiService.getPopularMovie();
-        if (moviesType == MoviesType.TOP_RATED) {
+        if (type == MoviesType.TOP_RATED) {
             call = apiService.getTopRatedMovie();
         }
 
@@ -118,14 +162,12 @@ public class MainActivity extends AppBaseActivity {
                     @Override
                     public void onCompleted() {
                         dismissDialog();
-                        MenuItem menuItem = menu.findItem(R.id.action_settings);
-                        if (moviesType == MoviesType.POPULAR) {
-                            menuItem.setTitle(R.string.action_settings_top);
-                            toolbar.setTitle(R.string.action_settings_popular);
-                        } else if (moviesType == MoviesType.TOP_RATED) {
-                            menuItem.setTitle(R.string.action_settings_popular);
-                            toolbar.setTitle(R.string.action_settings_top);
+                        if (type == MoviesType.POPULAR) {
+                            moviesType = MoviesType.POPULAR;
+                        } else if (type == MoviesType.TOP_RATED) {
+                            moviesType = MoviesType.TOP_RATED;
                         }
+                        invalidateOptionsMenu();
                     }
 
                     @Override

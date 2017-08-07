@@ -2,6 +2,7 @@
     <string name="app_name">PopMovie</string>
     <string name="action_settings_popular">Popular Movies</string>
     <string name="action_settings_top">Top Rated Movies</string>
+    <string name="action_settings_favorite">Favorite Movies</string>
     <string name="content_authority">id.ihsan.popmovie.app</string>
 
     <string name="progress_dialog_message">Please wait&#8230;</string>

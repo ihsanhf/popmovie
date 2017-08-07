@@ -9,7 +9,6 @@ import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 
 public class MovieProvider extends ContentProvider {
@@ -169,11 +168,7 @@ public class MovieProvider extends ContentProvider {
                         try {
                             _id = db.insertOrThrow(MovieContract.MovieEntry.TABLE_MOVIES,
                                     null, value);
-                        } catch (SQLiteConstraintException e) {
-                            Log.w(LOG_TAG, "Attempting to insert " +
-                                    value.getAsString(
-                                            MovieContract.MovieEntry.COLUMN_VERSION_NAME)
-                                    + " but value is already in database.");
+                        } catch (SQLiteConstraintException ignored) {
                         }
                         if (_id != -1) {
                             numInserted++;

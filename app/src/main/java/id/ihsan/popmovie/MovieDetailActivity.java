@@ -1,6 +1,8 @@
 package id.ihsan.popmovie;
 
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -12,8 +14,10 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
 
 import java.util.Locale;
@@ -21,6 +25,7 @@ import java.util.Locale;
 import id.ihsan.popmovie.adapters.TrailersAdapter;
 import id.ihsan.popmovie.helpers.Formatter;
 import id.ihsan.popmovie.helpers.ItemClickSupport;
+import id.ihsan.popmovie.helpers.MovieContract;
 import id.ihsan.popmovie.helpers.ViewHelper;
 import id.ihsan.popmovie.models.Movie;
 import id.ihsan.popmovie.models.MovieDetail;
@@ -38,11 +43,12 @@ import rx.android.schedulers.AndroidSchedulers;
  * @author Ihsan Helmi Faisal <ihsan.helmi@ovo.id>
  * @since 2017.10.07
  */
-public class MovieDetailActivity extends AppBaseActivity {
+public class MovieDetailActivity extends AppBaseActivity implements View.OnClickListener {
 
     private Toolbar toolbar;
     private CollapsingToolbarLayout collapsingToolbarLayout;
     private MovieImageView imgMovie;
+    private ImageView imgFavorite;
     private MovieTitleImageView imgMovieTitle;
     private TextView txtTitle, txtRelease, txtTime, txtRating, txtOverview;
     private RecyclerView listTrailers;
@@ -76,6 +82,7 @@ public class MovieDetailActivity extends AppBaseActivity {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar);
         imgMovieTitle = (MovieTitleImageView) findViewById(R.id.img_title);
+        imgFavorite = (ImageView) findViewById(R.id.img_star);
         imgMovie = (MovieImageView) findViewById(R.id.img_movie);
         txtTitle = (TextView) findViewById(R.id.txt_title);
         txtRelease = (TextView) findViewById(R.id.txt_release_year);
@@ -102,6 +109,9 @@ public class MovieDetailActivity extends AppBaseActivity {
             String urlImage2 = Constans.BASE_IMAGE_URL + "w500" + movie.getBackdropPath();
             Picasso.with(this).load(urlImage).into(imgMovie);
             Picasso.with(this).load(urlImage2).into(imgMovieTitle);
+
+            imgFavorite.setOnClickListener(this);
+            setFavoriteStar(isFavoriteMovie(String.valueOf(movie.getId())));
 
             txtTitle.setText(movie.getTitle());
             txtRelease.setText(Formatter.parseYear(movie.getReleaseDate()));
@@ -145,6 +155,26 @@ public class MovieDetailActivity extends AppBaseActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onClick(View view) {
+        if (view == imgFavorite) {
+            boolean isFavoriteMovie = isFavoriteMovie(String.valueOf(movie.getId()));
+            if (!isFavoriteMovie) {
+                setFavoriteStar(true);
+
+                ContentValues contentValues = new ContentValues();
+                contentValues.put(MovieContract.MovieEntry._ID, movie.getId());
+                contentValues.put(MovieContract.MovieEntry.COLUMN_MOVIE, new Gson().toJson(movie));
+
+                getContentResolver().insert(MovieContract.MovieEntry.CONTENT_URI, contentValues);
+            } else {
+                setFavoriteStar(false);
+
+                getContentResolver().delete(MovieContract.MovieEntry.CONTENT_URI, "_id=?", new String[]{String.valueOf(movie.getId())});
+            }
+        }
+    }
+
     protected void setupToolbar(Toolbar toolbar, String title) {
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
@@ -153,6 +183,19 @@ public class MovieDetailActivity extends AppBaseActivity {
             actionBar.setDisplayShowHomeEnabled(true);
             actionBar.setTitle(title);
         }
+    }
+
+    private boolean isFavoriteMovie(String id) {
+        Cursor c = getContentResolver().query(MovieContract.MovieEntry.CONTENT_URI, new String[]{MovieContract.MovieEntry._ID, MovieContract.MovieEntry.COLUMN_MOVIE},
+                "_id=?", new String[]{id}, null);
+        return (c != null ? c.getCount() : 0) > 0;
+    }
+
+    private void setFavoriteStar(boolean isFavoriteMovie) {
+        if (isFavoriteMovie)
+            imgFavorite.setImageResource(android.R.drawable.star_big_on);
+        else
+            imgFavorite.setImageResource(android.R.drawable.star_big_off);
     }
 
     private void requestMovieDetail(long movieId) {
