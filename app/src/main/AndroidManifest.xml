@@ -30,6 +30,12 @@
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="stateAlwaysHidden" />
+
+        <provider
+            android:authorities="@string/content_authority"
+            android:name=".helpers.MovieProvider"
+            android:exported="false"
+            android:syncable="true"/>
     </application>
 
 </manifest>
