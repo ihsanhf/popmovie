@@ -131,9 +131,24 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/space_x2"
+                android:layout_marginBottom="@dimen/space"
                 android:layout_marginEnd="@dimen/space_x2"
                 android:layout_marginStart="@dimen/space_x2"
+                android:text="@string/movie_detail_txt_reviews"
+                android:textStyle="bold" />
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/list_reviews"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/space"
+                android:layout_marginEnd="@dimen/space_x2"
+                android:layout_marginStart="@dimen/space_x2"
+                android:layout_marginTop="@dimen/space_x2"
                 android:text="@string/movie_detail_txt_trailer"
                 android:textStyle="bold" />
 

@@ -22,6 +22,7 @@ import com.squareup.picasso.Picasso;
 
 import java.util.Locale;
 
+import id.ihsan.popmovie.adapters.ReviewsAdapter;
 import id.ihsan.popmovie.adapters.TrailersAdapter;
 import id.ihsan.popmovie.helpers.Formatter;
 import id.ihsan.popmovie.helpers.ItemClickSupport;
@@ -29,6 +30,7 @@ import id.ihsan.popmovie.helpers.MovieContract;
 import id.ihsan.popmovie.helpers.ViewHelper;
 import id.ihsan.popmovie.models.Movie;
 import id.ihsan.popmovie.models.MovieDetail;
+import id.ihsan.popmovie.models.Reviews;
 import id.ihsan.popmovie.models.Video;
 import id.ihsan.popmovie.models.Videos;
 import id.ihsan.popmovie.networks.RestClient;
@@ -51,9 +53,10 @@ public class MovieDetailActivity extends AppBaseActivity implements View.OnClick
     private ImageView imgFavorite;
     private MovieTitleImageView imgMovieTitle;
     private TextView txtTitle, txtRelease, txtTime, txtRating, txtOverview;
-    private RecyclerView listTrailers;
+    private RecyclerView listReviews, listTrailers;
 
-    private TrailersAdapter adapter;
+    private ReviewsAdapter reviewsAdapter;
+    private TrailersAdapter trailersAdapter;
     private Movie movie;
 
     @Override
@@ -90,6 +93,7 @@ public class MovieDetailActivity extends AppBaseActivity implements View.OnClick
         txtRating = (TextView) findViewById(R.id.txt_rating);
         txtOverview = (TextView) findViewById(R.id.txt_overview);
         listTrailers = (RecyclerView) findViewById(R.id.list_trailers);
+        listReviews = (RecyclerView) findViewById(R.id.list_reviews);
     }
 
     @Override
@@ -98,11 +102,14 @@ public class MovieDetailActivity extends AppBaseActivity implements View.OnClick
         collapsingToolbarLayout.setTitle(getString(R.string.movie_detail_title));
         collapsingToolbarLayout.setExpandedTitleColor(getResources().getColor(android.R.color.transparent));
 
-        adapter = new TrailersAdapter();
+        reviewsAdapter = new ReviewsAdapter();
+        trailersAdapter = new TrailersAdapter();
 
-        LinearLayoutManager manager = new LinearLayoutManager(this);
-        listTrailers.setLayoutManager(manager);
-        listTrailers.setAdapter(adapter);
+        listReviews.setLayoutManager(new LinearLayoutManager(this));
+        listReviews.setAdapter(reviewsAdapter);
+
+        listTrailers.setLayoutManager(new LinearLayoutManager(this));
+        listTrailers.setAdapter(trailersAdapter);
 
         if (movie != null) {
             String urlImage = Constans.BASE_IMAGE_URL + "w342" + movie.getPosterPath();
@@ -125,7 +132,7 @@ public class MovieDetailActivity extends AppBaseActivity implements View.OnClick
         ItemClickSupport.addTo(listTrailers).setOnItemClickListener(new ItemClickSupport.OnItemClickListener() {
             @Override
             public void onItemClicked(RecyclerView recyclerView, int position, View v) {
-                Video video = adapter.getVideo(position);
+                Video video = trailersAdapter.getVideo(position);
                 if (video != null) {
                     String url = "https://www.youtube.com/watch?v=" + video.getKey();
                     Intent i = new Intent(Intent.ACTION_VIEW);
@@ -201,7 +208,7 @@ public class MovieDetailActivity extends AppBaseActivity implements View.OnClick
     private void requestMovieDetail(long movieId) {
         showDialog();
         RestClient.ApiService apiService = RestClient.getClient();
-        Observable<MovieDetail> call = apiService.getMovieDetail(movieId, "videos");
+        Observable<MovieDetail> call = apiService.getMovieDetail(movieId, "videos,reviews");
 
         call.observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<MovieDetail>() {
@@ -221,9 +228,14 @@ public class MovieDetailActivity extends AppBaseActivity implements View.OnClick
                         dismissDialog();
                         if (response != null) {
                             txtTime.setText(String.format(Locale.US, "%d mins", response.getRuntime()));
+
+                            Reviews reviews = response.getReviews();
+                            if (reviews != null)
+                                reviewsAdapter.setReviews(reviews.getResults());
+
                             Videos videos = response.getmVideos();
                             if (videos != null)
-                                adapter.setMovies(videos.getmVideos());
+                                trailersAdapter.setMovies(videos.getmVideos());
                         }
                     }
                 });

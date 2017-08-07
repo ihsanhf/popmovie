@@ -10,5 +10,6 @@
     <string name="internal_server_error">Server error</string>
 
     <string name="movie_detail_title">Movie Detail</string>
+    <string name="movie_detail_txt_reviews">Reviews :</string>
     <string name="movie_detail_txt_trailer">Trailers :</string>
 </resources>
