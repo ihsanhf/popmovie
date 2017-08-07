@@ -1,4 +1,4 @@
-package id.ihsan.popmovie.helpers;
+package id.ihsan.popmovie.db;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;

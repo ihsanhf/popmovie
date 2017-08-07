@@ -3,6 +3,7 @@ package id.ihsan.popmovie;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -16,9 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import id.ihsan.popmovie.adapters.MoviesAdapter;
+import id.ihsan.popmovie.db.MovieContract;
 import id.ihsan.popmovie.helpers.ItemClickSupport;
-import id.ihsan.popmovie.helpers.MovieContract;
-import id.ihsan.popmovie.helpers.MoviesType;
 import id.ihsan.popmovie.helpers.ViewHelper;
 import id.ihsan.popmovie.models.Movie;
 import id.ihsan.popmovie.models.Movies;
@@ -33,12 +33,15 @@ import rx.android.schedulers.AndroidSchedulers;
  */
 public class MainActivity extends AppBaseActivity {
 
+    private static final String MOVIE_POPULAR = "popular";
+    private static final String MOVIE_TOP_RATED = "top_rated";
+    private static final String MOVIE_FAVORITE = "favorite";
+
     private Toolbar toolbar;
     private RecyclerView gridMovies;
 
     private MoviesAdapter adapter;
-
-    private MoviesType moviesType = MoviesType.POPULAR;
+    private String moviesType = MOVIE_POPULAR;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +51,16 @@ public class MainActivity extends AppBaseActivity {
         findViews();
         initViews();
         initListeners();
+
+        if (savedInstanceState == null) {
+            retrieveMovies(MOVIE_POPULAR);
+        } else {
+            moviesType = savedInstanceState.getString("movie_type", MOVIE_POPULAR);
+            if (!moviesType.equals(MOVIE_FAVORITE)) {
+                List<Movie> movies = savedInstanceState.getParcelableArrayList("movies");
+                adapter.setMovies(movies);
+            }
+        }
     }
 
     @Override
@@ -86,15 +99,18 @@ public class MainActivity extends AppBaseActivity {
     protected void onResume() {
         super.onResume();
 
-        if (moviesType == MoviesType.POPULAR) {
-            retrieveMovies(MoviesType.POPULAR);
-        } else if (moviesType == MoviesType.TOP_RATED) {
-            retrieveMovies(MoviesType.TOP_RATED);
-        } else if (moviesType == MoviesType.FAVORITES) {
+        if (moviesType.equals(MOVIE_FAVORITE)) {
             retrieveFavoriteMovies();
-            moviesType = MoviesType.FAVORITES;
+            moviesType = MOVIE_FAVORITE;
             invalidateOptionsMenu();
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putString("movie_type", moviesType);
+        outState.putParcelableArrayList("movies", (ArrayList<? extends Parcelable>) adapter.getMovies());
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -105,15 +121,19 @@ public class MainActivity extends AppBaseActivity {
         menu.findItem(R.id.action_top).setVisible(true);
         menu.findItem(R.id.action_favorite).setVisible(true);
 
-        if (moviesType == MoviesType.POPULAR) {
-            menu.findItem(R.id.action_popular).setVisible(false);
-            toolbar.setTitle(R.string.action_settings_popular);
-        } else if (moviesType == MoviesType.TOP_RATED) {
-            menu.findItem(R.id.action_top).setVisible(false);
-            toolbar.setTitle(R.string.action_settings_top);
-        } else {
-            menu.findItem(R.id.action_favorite).setVisible(false);
-            toolbar.setTitle(R.string.action_settings_favorite);
+        switch (moviesType) {
+            case MOVIE_POPULAR:
+                menu.findItem(R.id.action_popular).setVisible(false);
+                toolbar.setTitle(R.string.action_settings_popular);
+                break;
+            case MOVIE_TOP_RATED:
+                menu.findItem(R.id.action_top).setVisible(false);
+                toolbar.setTitle(R.string.action_settings_top);
+                break;
+            case MOVIE_FAVORITE:
+                menu.findItem(R.id.action_favorite).setVisible(false);
+                toolbar.setTitle(R.string.action_settings_favorite);
+                break;
         }
         return true;
     }
@@ -122,12 +142,12 @@ public class MainActivity extends AppBaseActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_popular) {
-            retrieveMovies(MoviesType.POPULAR);
+            retrieveMovies(MOVIE_POPULAR);
         } else if (id == R.id.action_top) {
-            retrieveMovies(MoviesType.TOP_RATED);
+            retrieveMovies(MOVIE_TOP_RATED);
         } else if (id == R.id.action_favorite) {
             retrieveFavoriteMovies();
-            moviesType = MoviesType.FAVORITES;
+            moviesType = MOVIE_FAVORITE;
             invalidateOptionsMenu();
         }
 
@@ -149,11 +169,11 @@ public class MainActivity extends AppBaseActivity {
         adapter.setMovies(movies);
     }
 
-    private void retrieveMovies(final MoviesType type) {
+    private void retrieveMovies(final String type) {
         showDialog();
         RestClient.ApiService apiService = RestClient.getClient();
         Observable<Movies> call = apiService.getPopularMovie();
-        if (type == MoviesType.TOP_RATED) {
+        if (type.equals(MOVIE_TOP_RATED)) {
             call = apiService.getTopRatedMovie();
         }
 
@@ -162,11 +182,7 @@ public class MainActivity extends AppBaseActivity {
                     @Override
                     public void onCompleted() {
                         dismissDialog();
-                        if (type == MoviesType.POPULAR) {
-                            moviesType = MoviesType.POPULAR;
-                        } else if (type == MoviesType.TOP_RATED) {
-                            moviesType = MoviesType.TOP_RATED;
-                        }
+                        moviesType = type;
                         invalidateOptionsMenu();
                     }
 

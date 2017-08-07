@@ -26,7 +26,7 @@ import id.ihsan.popmovie.adapters.ReviewsAdapter;
 import id.ihsan.popmovie.adapters.TrailersAdapter;
 import id.ihsan.popmovie.helpers.Formatter;
 import id.ihsan.popmovie.helpers.ItemClickSupport;
-import id.ihsan.popmovie.helpers.MovieContract;
+import id.ihsan.popmovie.db.MovieContract;
 import id.ihsan.popmovie.helpers.ViewHelper;
 import id.ihsan.popmovie.models.Movie;
 import id.ihsan.popmovie.models.MovieDetail;
