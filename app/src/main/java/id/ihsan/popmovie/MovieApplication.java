@@ -2,7 +2,10 @@ package id.ihsan.popmovie;
 
 import android.app.Application;
 
+import com.crashlytics.android.Crashlytics;
 import com.facebook.stetho.Stetho;
+
+import io.fabric.sdk.android.Fabric;
 
 /**
  * @author Ihsan Helmi Faisal <ihsan.helmi@ovo.id>
@@ -15,6 +18,9 @@ public class MovieApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        Fabric.with(this, new Crashlytics());
+
         instance = this;
 
         initStetho();
