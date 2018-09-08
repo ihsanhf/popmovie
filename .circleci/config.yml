@@ -98,7 +98,6 @@ jobs:
     steps:
       - checkout
       - *remove_properties
-      - *accept_license
       - *restore_gradle_cache
       - *download_dependencies
       - *save_gradle_cache
@@ -124,7 +123,6 @@ jobs:
     steps:
       - checkout
       - *remove_properties
-      - *accept_license
       - *restore_gradle_cache
       - *download_dependencies
       - *save_gradle_cache
