@@ -64,7 +64,7 @@ references:
         git log -1 --pretty=format:"*%h* (%an): %s" > shared/build_title
 
   persist_to_workspace: &persist_to_workspace
-    - persist_to_workspace:
+    persist_to_workspace:
       root: shared
       paths:
         - build_number
@@ -72,12 +72,12 @@ references:
         - build_title
 
   store_artifacts: &store_artifacts
-    - store_artifacts:
+    store_artifacts:
       path: app/build/outputs/apk/
       destination: apks/
 
   store_report: &store_report
-    - store_artifacts:
+    store_artifacts:
       path: build_reports/
       destination: build_reports/
 
