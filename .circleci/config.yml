@@ -163,9 +163,9 @@ jobs:
 
 workflows:
   version: 2
-  build:
+  default:
     jobs:
-      - build
+      - build:
           filters:
             branches:
               ignore:
@@ -178,10 +178,10 @@ workflows:
                 - /^alpha/.*/
                 - /^release/.*/
 
-  build_development:
-      jobs:
-        - build_development
-            filters:
-              branches:
-                only:
-                  - development
+  development:
+    jobs:
+      - build_development:
+          filters:
+            branches:
+              only:
+                - development
