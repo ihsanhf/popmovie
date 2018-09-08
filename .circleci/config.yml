@@ -28,7 +28,7 @@ references:
   remove_properties: &remove_properties
     run:
       name: Removing gradle.properties
-      command: rm gradle.properties
+      command: rm -rf gradle.properties || true
 
   accept_license: &accept_license
     run:
