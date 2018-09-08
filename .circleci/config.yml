@@ -119,47 +119,47 @@ jobs:
             echo $apk
             apkanalyzer dex references $apk
 
-    build_development:
-      <<: *android_config
-      steps:
-        - checkout
-        - *remove_properties
-        - *accept_license
-        - *restore_gradle_cache
-        - *download_dependencies
-        - *save_gradle_cache
-        - run:
-            name: Assemble Debug
-            command: |
-              echo "Building WITH proguard. PR"
-              ./gradlew clean assembleDevDebug -PuseProguard=true -PbuildNumber=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --no-build-cache --stacktrace
-        - run:
-            name: Test Debug
-            command: |
-              echo "Running Development Tests"
-              ./gradlew testDevDebugUUnitTest -PbuildNumber=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
-        - run:
-            name: Apk info
-            command: |
-              apk=$(find ~/working/app/build/outputs/apk/ -name '*.apk' -print -quit)
-              echo $apk
-              apkanalyzer dex references $apk
-        - run:
-            name: Release notes
-            command: |
-              mkdir -p development
-              touch development/release_notes.txt
-              echo "Debug build for regression testing `date '+%Y-%m-%d'`" >> development/release_notes.txt
-              git log `git describe --tags --abbrev=0 HEAD^`..HEAD --pretty=format:"%s // %an" >> development/release_notes.txt
-        - *share_workflow
-        - *persist_to_workspace
-        - *store_artifacts
-        - *store_report
-        - deploy:
-            name: "Deploy to Development build to Fabric"
-            command: |
-              echo "Branch: ${CIRCLE_BRANCH} , PR: ${CIRCLE_PULL_REQUEST}"
-              ./gradlew crashlyticsUploadDistributionDevDebug --stacktrace --debug --no-daemon
+  build_development:
+    <<: *android_config
+    steps:
+      - checkout
+      - *remove_properties
+      - *accept_license
+      - *restore_gradle_cache
+      - *download_dependencies
+      - *save_gradle_cache
+      - run:
+          name: Assemble Debug
+          command: |
+            echo "Building WITH proguard. PR"
+            ./gradlew clean assembleDevDebug -PuseProguard=true -PbuildNumber=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --no-build-cache --stacktrace
+      - run:
+          name: Test Debug
+          command: |
+            echo "Running Development Tests"
+            ./gradlew testDevDebugUUnitTest -PbuildNumber=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
+      - run:
+          name: Apk info
+          command: |
+            apk=$(find ~/working/app/build/outputs/apk/ -name '*.apk' -print -quit)
+            echo $apk
+            apkanalyzer dex references $apk
+      - run:
+          name: Release notes
+          command: |
+            mkdir -p development
+            touch development/release_notes.txt
+            echo "Debug build for regression testing `date '+%Y-%m-%d'`" >> development/release_notes.txt
+            git log `git describe --tags --abbrev=0 HEAD^`..HEAD --pretty=format:"%s // %an" >> development/release_notes.txt
+      - *share_workflow
+      - *persist_to_workspace
+      - *store_artifacts
+      - *store_report
+      - deploy:
+          name: "Deploy to Development build to Fabric"
+          command: |
+            echo "Branch: ${CIRCLE_BRANCH} , PR: ${CIRCLE_PULL_REQUEST}"
+            ./gradlew crashlyticsUploadDistributionDevDebug --stacktrace --debug --no-daemon
 
 workflows:
   version: 2
