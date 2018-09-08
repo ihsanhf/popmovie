@@ -1,171 +1,187 @@
-# Java Gradle CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-java/ for more details
-#
 version: 2
+references:
+  ## Workspaces
+  workspace: &workspace
+    ~/popmovie
+
+  ## Docker image configurations
+  android_config: &android_config
+    working_directory: *workspace
+    docker:
+      - image: circleci/android:api-27-alpha
+    environment:
+      TZ: "/usr/share/zoneinfo/Asia/Indonesia"
+      TERM: dumb
+      _JAVA_OPTIONS: "-Xmx3g -Djava.util.concurrent.ForkJoinPool.common.parallelism=2"
+      GRADLE_OPTS: '-Dorg.gradle.jvmargs="-Xmx1536m -XX:+HeapDumpOnOutOfMemoryError" -Dfile.encoding=utf-8 -Dkotlin.compiler.execution.strategy="in-proces"'
+
+  android_config: &android_config_release
+    working_directory: *workspace
+    docker:
+      - image: circleci/android:api-27-alpha
+    environment:
+      TZ: "/usr/share/zoneinfo/Asia/Indonesia"
+      TERM: dumb
+      _JAVA_OPTIONS: "-Xmx3g -XX:ParallelGCThreads=2 -XX:ConcGCThreads=2 -XX:ParallelGCThreads=2 -Djava.util.concurrent.ForkJoinPool.common.parallelism=4"
+      GRADLE_OPTS: '-Dorg.gradle.jvmargs="-Xmx1536m -XX:+HeapDumpOnOutOfMemoryError" -Dfile.encoding=utf-8 -Dkotlin.compiler.execution.strategy="in-proces"'
+
+  remove_properties: &remove_properties
+    run:
+      name: Removing gradle.properties
+      command: rm gradle.properties
+
+  accept_license: &accept_license
+    run:
+      name: Accepting License
+      command: cp -r licenses/. $ANDROID_HOME/licenses
+
+  restore_gradle_cache: &restore_gradle_cache
+    restore_cache:
+      key:
+        - v1-dependencies-{{ checksum "build.gradle" }}
+          # fallback to using the latest cache if no exact match is found
+        - v1-dependencies-
+
+  download_dependencies: &download_dependencies
+    run:
+      name: Download Dependencies
+      command: ./gradlew androidDependencies --no-daemon
+
+  save_gradle_cache: &save_gradle_cache
+    save_cache:
+      key: v1-dependencies-{{ checksum "build.gradle" }}
+      paths:
+        - ~/.gradle
+        - ~/.m2
+
+  share_workflow: &share_workflow
+    run:
+      name: Put data to share in workflow
+      command: |
+        mkdir ~/working/shared
+        echo $CIRCLE_BUILD_NUM > shared/build_number
+        echo $CIRCLE_BUILD_URL > shared/build_url
+        git log -1 --pretty=format:"*%h* (%an): %s" > shared/build_title
+
+  persist_to_workspace: &persist_to_workspace
+    - persist_to_workspace:
+      root: shared
+      paths:
+        - build_number
+        - build_url
+        - build_title
+
+  store_artifacts: &store_artifacts
+    - store_artifacts:
+      path: app/build/outputs/apk/
+      destination: apks/
+
+  store_report: &store_report
+    - store_artifacts:
+      path: build_reports/
+      destination: build_reports/
+
+  ## Keys
+#  decode_android_key: &decode_android_key
+#    run:
+#      name: Decode Android key store
+#      command: echo $KEYSTORE | base64 -di | tee keystore.jks app/keystore.jks >/dev/null
+#
+#  create_google_play_key: &create_google_play_key
+#    run:
+#      name: Create Google Play key
+#      command: echo $GOOGLE_PLAY_KEY > google-play-key.json
+
 jobs:
-
   build:
-    docker:
-      - image: circleci/android:api-27-alpha
-
-    working_directory: ~/popmovie
-
-    environment:
-      # Customize the JVM maximum heap limit
-      JVM_OPTS: -Xmx3200m
-      TERM: dumb
-
+    <<: *android_config
     steps:
       - checkout
-
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "build.gradle" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
-
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "build.gradle" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
-
-      - run:
-          name: Download Dependencies
-          command: ./gradlew androidDependencies --no-daemon
-
-      - save_cache:
-          paths:
-            - ~/.gradle
-          key: v1-dependencies-{{ checksum "build.gradle" }}
-
+      - *remove_properties
+      - *accept_license
+      - *restore_gradle_cache
+      - *download_dependencies
+      - *save_gradle_cache
       - run:
           name: Assemble Debug
           command: |
-              echo "Building Dev build without PROGUARD (but should be without proguard, workaround for maindex issue). Development"
-              ./gradlew clean assembleDevDebug -PuseProguard=false -PbuildNumber=$CIRCLE_BUILD_NUM --parallel --max-workers=4 --no-daemon -PdisablePreDex --build-cache --stacktrace
-
+            echo "Building WITH proguard. PR"
+            ./gradlew clean assembleDevDebug -PuseProguard=true -PbuildNumber=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --no-build-cache --stacktrace
       - run:
           name: Test Debug
           command: |
-            echo "Running dev Tests"
-            ./gradlew testDevDebug -PbuildNumber=$CIRCLE_BUILD_NUM --parallel --max-workers=4 --build-cache --stacktrace
-
-  build_dev:
-    docker:
-      # specify the version you desire here
-      - image: circleci/android:api-27-alpha
-
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
-
-    working_directory: ~/popmovie
-
-    environment:
-      # Customize the JVM maximum heap limit
-      JVM_OPTS: -Xmx3200m
-      TERM: dumb
-
-    steps:
-      - checkout
-
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "build.gradle" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
-
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "build.gradle" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
-
-      - run:
-          name: Download Dependencies
-          command: ./gradlew androidDependencies --no-daemon
-
-      - save_cache:
-          paths:
-            - ~/.gradle
-          key: v1-dependencies-{{ checksum "build.gradle" }}
-
-      - run:
-          name: Assemble Debug
-          command: |
-              echo "Building Dev build without PROGUARD (but should be without proguard, workaround for maindex issue). Development"
-              ./gradlew clean assembleDevDebug -PuseProguard=false -PbuildNumber=$CIRCLE_BUILD_NUM --parallel --max-workers=4 --no-daemon -PdisablePreDex --build-cache --stacktrace
-
-      - run:
-          name: Test Debug
-          command: |
-            echo "Running dev Tests"
-            ./gradlew testDevDebug -PbuildNumber=$CIRCLE_BUILD_NUM --parallel --max-workers=4 --build-cache --stacktrace
-
+            echo "Running Development Tests"
+            ./gradlew testDevDebugUUnitTest -PbuildNumber=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
       - run:
           name: Apk info
           command: |
-            apk=$(find ~/popmovie/app/build/outputs/apk/ -name '*.apk' -print -quit)
+            apk=$(find ~/working/app/build/outputs/apk/ -name '*.apk' -print -quit)
             echo $apk
             apkanalyzer dex references $apk
 
-      - run:
-          name: Release notes
-          command: |
-            mkdir -p dev
-            touch dev/release_notes.txt
-            echo "Debug build for regression testing `date '+%Y-%m-%d'`" >> dev/release_notes.txt
-            git log `git describe --tags --abbrev=0 HEAD^`..HEAD --pretty=format:"%s // %an" >> dev/release_notes.txt
-
-      - run:
-          name: Put data to share in workflow
-          command: |
-            mkdir ~/popmovie/shared
-            echo $CIRCLE_BUILD_NUM > shared/build_number
-            echo $CIRCLE_BUILD_URL > shared/build_url
-            git log -1 --pretty=format:"*%h* (%an): %s" > shared/build_title
-
-      - persist_to_workspace:
-          root: shared
-          paths:
-            - build_number
-            - build_url
-            - build_title
-
-      - store_artifacts:
-          path: app/build/outputs/apk/
-          destination: apks/
-
-      - store_artifacts:
-          path: build_reports/
-          destination: build_reports/
-
-      - deploy:
-          name: "Deploy to Staging build to Fabric"
-          command: |
-            echo "Branch: ${CIRCLE_BRANCH} , PR: ${CIRCLE_PULL_REQUEST}"
-            if [ "${CIRCLE_BRANCH}" == "staging" -o "${CIRCLE_PULL_REQUEST}" != "" ]; then
-              ./gradlew crashlyticsUploadDistributionStagingDebug --stacktrace --debug --no-daemon
-            fi
+    build_development:
+      <<: *android_config
+      steps:
+        - checkout
+        - *remove_properties
+        - *accept_license
+        - *restore_gradle_cache
+        - *download_dependencies
+        - *save_gradle_cache
+        - run:
+            name: Assemble Debug
+            command: |
+              echo "Building WITH proguard. PR"
+              ./gradlew clean assembleDevDebug -PuseProguard=true -PbuildNumber=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --no-build-cache --stacktrace
+        - run:
+            name: Test Debug
+            command: |
+              echo "Running Development Tests"
+              ./gradlew testDevDebugUUnitTest -PbuildNumber=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
+        - run:
+            name: Apk info
+            command: |
+              apk=$(find ~/working/app/build/outputs/apk/ -name '*.apk' -print -quit)
+              echo $apk
+              apkanalyzer dex references $apk
+        - run:
+            name: Release notes
+            command: |
+              mkdir -p development
+              touch development/release_notes.txt
+              echo "Debug build for regression testing `date '+%Y-%m-%d'`" >> development/release_notes.txt
+              git log `git describe --tags --abbrev=0 HEAD^`..HEAD --pretty=format:"%s // %an" >> development/release_notes.txt
+        - *share_workflow
+        - *persist_to_workspace
+        - *store_artifacts
+        - *store_report
+        - deploy:
+            name: "Deploy to Development build to Fabric"
+            command: |
+              echo "Branch: ${CIRCLE_BRANCH} , PR: ${CIRCLE_PULL_REQUEST}"
+              ./gradlew crashlyticsUploadDistributionDevDebug --stacktrace --debug --no-daemon
 
 workflows:
   version: 2
-  default:
+  build:
     jobs:
-      - build:
-        filters:
-          tags:
-            only: /.*/
+      - build
+          filters:
+            branches:
+              ignore:
+                - master
+                - develop
+                - staging
+                - alpha
+                - release
+                - /^staging/.*/
+                - /^alpha/.*/
+                - /^release/.*/
 
-  development:
-    jobs:
-      -build_dev:
-        filters:
-          tag:
-            only: /develop
-          branches:
-            ignore: /.*/
+  build_development:
+      jobs:
+        - build_development
+            filters:
+              branches:
+                only:
+                  - development
