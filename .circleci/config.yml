@@ -58,7 +58,7 @@ references:
     run:
       name: Put data to share in workflow
       command: |
-        mkdir ~/working/shared
+        mkdir ~/popmovie/shared
         echo $CIRCLE_BUILD_NUM > shared/build_number
         echo $CIRCLE_BUILD_URL > shared/build_url
         git log -1 --pretty=format:"*%h* (%an): %s" > shared/build_title
@@ -115,7 +115,7 @@ jobs:
       - run:
           name: Apk info
           command: |
-            apk=$(find ~/working/app/build/outputs/apk/ -name '*.apk' -print -quit)
+            apk=$(find ~/popmovie/app/build/outputs/apk/ -name '*.apk' -print -quit)
             echo $apk
             apkanalyzer dex references $apk
 
@@ -141,7 +141,7 @@ jobs:
       - run:
           name: Apk info
           command: |
-            apk=$(find ~/working/app/build/outputs/apk/ -name '*.apk' -print -quit)
+            apk=$(find ~/popmovie/app/build/outputs/apk/ -name '*.apk' -print -quit)
             echo $apk
             apkanalyzer dex references $apk
       - run:
