@@ -154,10 +154,11 @@ jobs:
       - run:
           name: Release notes
           command: |
+            export APP_VERSION_STRING = `grep appVersionString ../app/build.gradle | sed -e 's/ //g;s/.*appVersionString="//;s/".*//g'`
             mkdir -p development
-            touch development/release_notes.txt
-            echo "Debug build for regression testing `date '+%Y-%m-%d'`" >> development/release_notes.txt
-            git log `git describe --tags --abbrev=0 HEAD^`..HEAD --pretty=format:"%s // %an" >> development/release_notes.txt
+            touch development/$APP_VERSION_STRING.txt
+            echo "Debug build for regression testing `date '+%Y-%m-%d'`" >> development/$APP_VERSION_STRING.txt
+            git log `git describe --tags --abbrev=0 HEAD^`..HEAD --pretty=format:"%s // %an" >> development/$APP_VERSION_STRING.txt
       - *share_workflow
       - *persist_to_workspace
       - *store_artifacts
@@ -166,7 +167,7 @@ jobs:
           name: "Deploy to Development build to Fabric"
           command: |
             echo "Branch: ${CIRCLE_BRANCH} , PR: ${CIRCLE_PULL_REQUEST}"
-            ./gradlew crashlyticsUploadDistributionDevDebug -PBUILD_NUMBER=$CIRCLE_BUILD_NUM
+            ./gradlew crashlyticsUploadDistributionDevDebug -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --no-daemon
 
 workflows:
   version: 2
