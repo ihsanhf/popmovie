@@ -13,9 +13,7 @@ function copyEnvVarsToProperties {
     if [ ! -f "$GRADLE_PROPERTIES" ]
     then
         echo "${GRADLE_PROPERTIES} does not exist...Creating Properties file"
-
-	echo "FABRIC_API_KEY=FABRIC_API_KEY" >> ${GRADLE_PROPERTIES}
-
+        echo "FABRIC_API_KEY=$FABRIC_API_KEY" >> ${GRADLE_PROPERTIES}
     fi
 }
 
