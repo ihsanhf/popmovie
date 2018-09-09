@@ -20,6 +20,11 @@ repositories {
     maven { url 'https://maven.fabric.io/public' }
 }
 
+ext {
+    fabricProperties = new Properties()
+    fabricProperties.load(new FileInputStream(file("fabric.properties")))
+}
+
 def VERSION_NAME = getVersionName()
 def VERSION_CODE = getVersionCode()
 
@@ -35,7 +40,7 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
         manifestPlaceholders = [
-                FABRIC_API_KEY: FABRIC_API_KEY
+                FABRIC_API_KEY: fabricProperties['apiKey']
         ]
 
         def releaseNote = file("../" + getVersionName() + "-" + getVersionCodeOnly() + ".md")
