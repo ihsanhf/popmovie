@@ -166,7 +166,7 @@ jobs:
           name: "Deploy to Development build to Fabric"
           command: |
             echo "Branch: ${CIRCLE_BRANCH} , PR: ${CIRCLE_PULL_REQUEST}"
-            ./gradlew crashlyticsUploadDistributionDevDebug -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --stacktrace --debug --no-daemon
+            ./gradlew crashlyticsUploadDistributionDevDebug -PBUILD_NUMBER=$CIRCLE_BUILD_NUM
 
 workflows:
   version: 2
