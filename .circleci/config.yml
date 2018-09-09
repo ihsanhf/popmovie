@@ -33,7 +33,7 @@ references:
   install_properties: &install_properties
     run:
       name: Setup environment
-      command: ./misc/circleci_env_setup.sh
+      command: bash ./misc/circleci_env_setup.sh
 
   accept_license: &accept_license
     run:
