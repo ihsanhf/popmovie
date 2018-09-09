@@ -112,12 +112,12 @@ jobs:
           name: Assemble Debug
           command: |
             echo "Building WITH proguard. PR"
-            ./gradlew clean assembleDevDebug -PuseProguard=true -PbuildNumber=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --no-build-cache --stacktrace
+            ./gradlew clean assembleDevDebug -PuseProguard=true -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --no-build-cache --stacktrace
       - run:
           name: Test Debug
           command: |
             echo "Running Development Tests"
-            ./gradlew testDevDebugUnitTest -PbuildNumber=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
+            ./gradlew testDevDebugUnitTest -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
       - run:
           name: Apk info
           command: |
@@ -139,12 +139,12 @@ jobs:
           name: Assemble Debug
           command: |
             echo "Building WITH proguard. PR"
-            ./gradlew clean assembleDevDebug -PuseProguard=true -PbuildNumber=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --no-build-cache --stacktrace
+            ./gradlew clean assembleDevDebug -PuseProguard=true -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --no-build-cache --stacktrace
       - run:
           name: Test Debug
           command: |
             echo "Running Development Tests"
-            ./gradlew testDevDebugUnitTest -PbuildNumber=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
+            ./gradlew testDevDebugUnitTest -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
       - run:
           name: Apk info
           command: |
@@ -166,7 +166,7 @@ jobs:
           name: "Deploy to Development build to Fabric"
           command: |
             echo "Branch: ${CIRCLE_BRANCH} , PR: ${CIRCLE_PULL_REQUEST}"
-            ./gradlew crashlyticsUploadDistributionDevDebug --stacktrace --debug --no-daemon
+            ./gradlew crashlyticsUploadDistributionDevDebug -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --stacktrace --debug --no-daemon
 
 workflows:
   version: 2
