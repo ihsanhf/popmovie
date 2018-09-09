@@ -30,6 +30,11 @@ references:
       name: Removing gradle.properties
       command: rm -rf gradle.properties || true
 
+  install_properties: &install_properties
+    run:
+      name: Setup environment
+      command: ./misc/circleci_env_setup.sh
+
   accept_license: &accept_license
     run:
       name: Accepting License
@@ -97,7 +102,9 @@ jobs:
     <<: *android_config
     steps:
       - checkout
+      - *accept_license
       - *remove_properties
+      - *install_properties
       - *restore_gradle_cache
       - *download_dependencies
       - *save_gradle_cache
@@ -122,7 +129,9 @@ jobs:
     <<: *android_config
     steps:
       - checkout
+      - *accept_license
       - *remove_properties
+      - *install_properties
       - *restore_gradle_cache
       - *download_dependencies
       - *save_gradle_cache

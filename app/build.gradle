@@ -35,7 +35,7 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
         manifestPlaceholders = [
-                FABRIC_API_KEY: fabricApiKey
+                FABRIC_API_KEY: FABRIC_API_KEY
         ]
 
         def releaseNote = file("../" + getVersionName() + "-" + getVersionCodeOnly() + ".md")
