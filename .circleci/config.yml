@@ -154,7 +154,7 @@ jobs:
       - run:
           name: Release notes
           command: |
-            export APP_VERSION_STRING = `grep appVersionString ../app/build.gradle | sed -e 's/ //g;s/.*appVersionString="//;s/".*//g'`
+            echo "export APP_VERSION_STRING=`grep appVersionString ../app/build.gradle | sed -e 's/ //g;s/.*appVersionString="//;s/".*//g'`"
             mkdir -p development
             touch development/$APP_VERSION_STRING.txt
             echo "Debug build for regression testing `date '+%Y-%m-%d'`" >> development/$APP_VERSION_STRING.txt
