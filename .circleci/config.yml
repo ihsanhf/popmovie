@@ -30,11 +30,6 @@ references:
       name: Removing gradle.properties
       command: rm -rf gradle.properties || true
 
-  install_properties: &install_properties
-    run:
-      name: Setup environment
-      command: bash ./misc/circleci_env_setup.sh
-
   accept_license: &accept_license
     run:
       name: Accepting License
@@ -98,26 +93,49 @@ references:
 #      command: echo $GOOGLE_PLAY_KEY > google-play-key.json
 
 jobs:
-  build:
+  initialize:
     <<: *android_config
     steps:
       - checkout
-#      - *accept_license
+      - *accept_license
       - *remove_properties
-      - *install_properties
       - *restore_gradle_cache
       - *download_dependencies
       - *save_gradle_cache
+
+  test:
+    <<: *android_config_release
+    steps:
       - run:
-          name: Assemble Debug
+          name: Running Test
           command: |
-            echo "Building WITH proguard. PR"
-            ./gradlew clean assembleDevDebug -PuseProguard=true -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --no-build-cache --stacktrace
+            if [ "${CIRCLE_BRANCH}" == "staging"* ] || [ "${CIRCLE_BRANCH}" == "alpha"* ] ; then
+              ./gradlew clean testStagingReleaseUnitTest -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
+
+            elif [ "${CIRCLE_BRANCH}" == "master" ] || [ "${CIRCLE_BRANCH}" == "release"* ] ; then
+              ./gradlew clean testProductionReleaseUnitTest --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
+
+            else
+              ./gradlew clean testDevDebugUnitTest -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
+
+            fi
+
+  build:
+    <<: *android_config_release
+    steps:
       - run:
-          name: Test Debug
+          name: Building Project
           command: |
-            echo "Running Development Tests"
-            ./gradlew testDevDebugUnitTest -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
+            if [ "${CIRCLE_BRANCH}" == "staging"* ] || [ "${CIRCLE_BRANCH}" == "alpha"* ] ; then
+              ./gradlew clean assembleStagingRelease -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
+
+            elif [ "${CIRCLE_BRANCH}" == "master" ] || [ "${CIRCLE_BRANCH}" == "release"* ] ; then
+              ./gradlew clean assembleProductionRelease --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
+
+            else
+              ./gradlew clean assembleDevDebug -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
+
+            fi
       - run:
           name: Apk info
           command: |
@@ -125,130 +143,58 @@ jobs:
             echo $apk
             apkanalyzer dex references $apk
 
-  build_development:
+  artifacts:
     <<: *android_config
     steps:
-      - checkout
-#      - *accept_license
-      - *remove_properties
-      - *install_properties
-      - *restore_gradle_cache
-      - *download_dependencies
-      - *save_gradle_cache
-      - run:
-          name: Assemble Debug
-          command: |
-            echo "Building WITH proguard. PR"
-            ./gradlew clean assembleDevDebug -PuseProguard=true -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --no-build-cache --stacktrace
-      - run:
-          name: Test Debug
-          command: |
-            echo "Running Development Tests"
-            ./gradlew testDevDebugUnitTest -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
-      - run:
-          name: Apk info
-          command: |
-            apk=$(find ~/popmovie/app/build/outputs/apk/ -name '*.apk' -print -quit)
-            echo $apk
-            apkanalyzer dex references $apk
       - run:
           name: Release notes
           command: |
+          if [ "${CIRCLE_BRANCH}" == "develop" ] ; then
             appVersion=$(grep appVersionString build.gradle | sed -e 's/ //g;s/.*appVersionString="//;s/".*//g')
             appVersionNumber=$(grep appVersionCode build.gradle | sed -e 's/[^0-9]//g')
             mkdir ~/popmovie/notes
-            git log --format=%B $CIRCLE_SHA1..HEAD >> ~/popmovie/notes/$appVersion-$appVersionNumber
-      - *share_workflow
-      - *persist_to_workspace
-      - *store_artifacts
-      - *store_report
-      - deploy:
-          name: "Deploy to Development build to Fabric"
-          command: |
-            echo "Branch: ${CIRCLE_BRANCH} , PR: ${CIRCLE_PULL_REQUEST}"
-            ./gradlew crashlyticsUploadDistributionDevDebug -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --no-daemon
+            git log --pretty=format:"%s // %an" --since=3.weeks >> ~/popmovie/notes/$appVersion-$appVersionNumber
+          fi
+     - *share_workflow
+     - *persist_to_workspace
+     - *store_artifacts
+     - *store_report
 
-  build_staging:
-    <<: *android_config_release
-    steps:
-      - checkout
-#      - *accept_license
-      - *remove_properties
-      - *install_properties
-      - *restore_gradle_cache
-      - *download_dependencies
-      - *save_gradle_cache
-      - run:
-          name: Assemble Debug
-          command: |
-            echo "Building WITH proguard. PR"
-            ./gradlew clean assembleStagingRelease -PuseProguard=true -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --no-build-cache --stacktrace
-      - run:
-          name: Test Debug
-          command: |
-            echo "Running Staging Tests"
-            ./gradlew testStagingReleaseUnitTest -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
-      - run:
-          name: Apk info
-          command: |
-            apk=$(find ~/popmovie/app/build/outputs/apk/ -name '*.apk' -print -quit)
-            echo $apk
-            apkanalyzer dex references $apk
-      - *share_workflow
-      - *persist_to_workspace
-      - *store_artifacts
-      - *store_report
-      - deploy:
-          name: "Deploy to Staging build to Fabric"
-          command: |
-            echo "Branch: ${CIRCLE_BRANCH} , PR: ${CIRCLE_PULL_REQUEST}"
-            ./gradlew crashlyticsUploadDistributionStagingRelease -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --no-daemon
-
-  build_production:
-      <<: *android_config_release
+  deploy:
+      <<: *android_config
       steps:
-        - checkout
-  #      - *accept_license
-        - *remove_properties
-        - *install_properties
-        - *restore_gradle_cache
-        - *download_dependencies
-        - *save_gradle_cache
-        - run:
-            name: Assemble Debug
-            command: |
-              echo "Building WITH proguard. PR"
-              ./gradlew clean assembleProductionRelease -PuseProguard=true -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --no-build-cache --stacktrace
-        - run:
-            name: Test Debug
-            command: |
-              echo "Running Production Tests"
-              ./gradlew testProductionReleaseUnitTest -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
-        - run:
-            name: Apk info
-            command: |
-              apk=$(find ~/popmovie/app/build/outputs/apk/ -name '*.apk' -print -quit)
-              echo $apk
-              apkanalyzer dex references $apk
-        - *share_workflow
-        - *persist_to_workspace
-        - *store_artifacts
-        - *store_report
         - deploy:
-            name: "Deploy to Production build to Fabric"
+            name: "Deploy to Fabric Beta"
             command: |
               echo "Branch: ${CIRCLE_BRANCH} , PR: ${CIRCLE_PULL_REQUEST}"
-              ./gradlew crashlyticsUploadDistributionProductionRelease --no-daemon
+              if [ "${CIRCLE_BRANCH}" == "staging"* ] || [ "${CIRCLE_BRANCH}" == "alpha"* ] ; then
+                ./gradlew crashlyticsUploadDistributionStagingRelease -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --no-daemon
 
+              elif [ "${CIRCLE_BRANCH}" == "master" ] || [ "${CIRCLE_BRANCH}" == "release"* ] ; then
+                ./gradlew crashlyticsUploadDistributionProductionRelease --no-daemon
+
+              else
+                ./gradlew crashlyticsUploadDistributionDevDebug -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --no-daemon
+
+              fi
 
 workflows:
   version: 2
-  default:
+  build_project:
     jobs:
+      - initialize
+      - test:
+          requires:
+            - initialize
       - build:
+          requires:
+            - test
+      - artifacts:
+          requires:
+            - build
           filters:
             branches:
-              ignore:
+              only:
                 - master
                 - develop
                 - staging
@@ -257,31 +203,17 @@ workflows:
                 - /^staging/.*/
                 - /^alpha/.*/
                 - /^release/.*/
-
-  development:
-    jobs:
-      - build_development:
+      - deploy:
+          requires:
+            - build
           filters:
             branches:
               only:
+                - master
                 - develop
-
-  staging:
-    jobs:
-      - build_staging:
-          filters:
-            branches:
-              only:
                 - staging
                 - alpha
+                - release
                 - /^staging/.*/
                 - /^alpha/.*/
-
-  staging:
-    jobs:
-      - build_production:
-          filters:
-            branches:
-              only:
-                - release
                 - /^release/.*/
