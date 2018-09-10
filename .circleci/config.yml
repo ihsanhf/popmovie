@@ -279,7 +279,7 @@ workflows:
 
   staging:
     jobs:
-      - build_development:
+      - build_production:
           filters:
             branches:
               only:

@@ -43,7 +43,7 @@ android {
                 FABRIC_API_KEY: fabricProperties['apiKey']
         ]
 
-        def releaseNote = file("../" + getVersionName() + "-" + getVersionCodeOnly() + ".md")
+        def releaseNote = file("../notes/" + getVersionName() + "-" + getVersionCodeOnly())
         if (releaseNote.exists()) {
             ext.betaDistributionReleaseNotes = new File(releaseNote.absolutePath).getText('UTF-8')
         }
