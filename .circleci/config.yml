@@ -110,8 +110,9 @@ jobs:
       - *save_gradle_cache
 
   test:
-    <<: *android_config_release
+    <<: *android_config
     steps:
+      - *restore_gradle_cache
       - run:
           name: Running Test
           command: |
@@ -127,19 +128,20 @@ jobs:
             fi
 
   build:
-    <<: *android_config_release
+    <<: *android_config
     steps:
+      - *restore_gradle_cache
       - run:
           name: Building Project
           command: |
             if [ "${CIRCLE_BRANCH}" == "staging"* ] || [ "${CIRCLE_BRANCH}" == "alpha"* ] ; then
-              ./gradlew clean assembleStagingRelease -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
+              ./gradlew assembleStagingRelease -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
 
             elif [ "${CIRCLE_BRANCH}" == "master" ] || [ "${CIRCLE_BRANCH}" == "release"* ] ; then
-              ./gradlew clean assembleProductionRelease --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
+              ./gradlew assembleProductionRelease --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
 
             else
-              ./gradlew clean assembleDevDebug -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
+              ./gradlew assembleDevDebug -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
 
             fi
       - run:
@@ -152,6 +154,7 @@ jobs:
   artifacts:
     <<: *android_config
     steps:
+      - *restore_gradle_cache
       - run:
           name: Release notes
           command: |
@@ -169,6 +172,7 @@ jobs:
   deploy:
     <<: *android_config
     steps:
+      - *restore_gradle_cache
       - deploy:
           name: "Deploy to Fabric Beta"
           command: |
