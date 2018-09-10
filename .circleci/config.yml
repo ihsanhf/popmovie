@@ -156,8 +156,8 @@ jobs:
           command: |
             appVersion=$(grep appVersionString build.gradle | sed -e 's/ //g;s/.*appVersionString="//;s/".*//g')
             appVersionNumber=$(grep appVersionCode build.gradle | sed -e 's/[^0-9]//g')
-            mkdir notes
-            git log --format=%B $CIRCLE_SHA1..HEAD >> notes/$appVersion-$appVersionNumber
+            mkdir ~/popmovie/notes
+            git log --format=%B $CIRCLE_SHA1..HEAD >> ~/popmovie/notes/$appVersion-$appVersionNumber
       - *share_workflow
       - *persist_to_workspace
       - *store_artifacts
