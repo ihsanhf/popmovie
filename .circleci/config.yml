@@ -155,10 +155,9 @@ jobs:
           name: Release notes
           command: |
             appVersion=$(grep appVersionString build.gradle | sed -e 's/ //g;s/.*appVersionString="//;s/".*//g')
-            mkdir -p development
-            touch "development/${appVersion}.txt"
-            echo "Debug build for regression testing `date '+%Y-%m-%d'`" >> "development/${appVersion}.txt"
-            git log `git describe --tags --abbrev=0 HEAD^`..HEAD --pretty=format:"%s // %an" >> "development/${appVersion}.txt"
+            appVersionNumber=$(grep appVersionCode build.gradle | sed -e 's/[^0-9]//g')
+            mkdir notes
+            git log `git describe --tags --abbrev=0 HEAD^`..HEAD --pretty=format:"%s // %an" >> notes/$appVersion-$appVersionNumber
       - *share_workflow
       - *persist_to_workspace
       - *store_artifacts
@@ -168,6 +167,79 @@ jobs:
           command: |
             echo "Branch: ${CIRCLE_BRANCH} , PR: ${CIRCLE_PULL_REQUEST}"
             ./gradlew crashlyticsUploadDistributionDevDebug -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --no-daemon
+
+  build_staging:
+    <<: *android_config_release
+    steps:
+      - checkout
+#      - *accept_license
+      - *remove_properties
+      - *install_properties
+      - *restore_gradle_cache
+      - *download_dependencies
+      - *save_gradle_cache
+      - run:
+          name: Assemble Debug
+          command: |
+            echo "Building WITH proguard. PR"
+            ./gradlew clean assembleStagingRelease -PuseProguard=true -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --no-build-cache --stacktrace
+      - run:
+          name: Test Debug
+          command: |
+            echo "Running Staging Tests"
+            ./gradlew testStagingReleaseUnitTest -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
+      - run:
+          name: Apk info
+          command: |
+            apk=$(find ~/popmovie/app/build/outputs/apk/ -name '*.apk' -print -quit)
+            echo $apk
+            apkanalyzer dex references $apk
+      - *share_workflow
+      - *persist_to_workspace
+      - *store_artifacts
+      - *store_report
+      - deploy:
+          name: "Deploy to Staging build to Fabric"
+          command: |
+            echo "Branch: ${CIRCLE_BRANCH} , PR: ${CIRCLE_PULL_REQUEST}"
+            ./gradlew crashlyticsUploadDistributionStagingRelease -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --no-daemon
+
+  build_production:
+      <<: *android_config_release
+      steps:
+        - checkout
+  #      - *accept_license
+        - *remove_properties
+        - *install_properties
+        - *restore_gradle_cache
+        - *download_dependencies
+        - *save_gradle_cache
+        - run:
+            name: Assemble Debug
+            command: |
+              echo "Building WITH proguard. PR"
+              ./gradlew clean assembleProductionRelease -PuseProguard=true -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --no-build-cache --stacktrace
+        - run:
+            name: Test Debug
+            command: |
+              echo "Running Production Tests"
+              ./gradlew testProductionReleaseUnitTest -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --parallel --max-workers=2 --no-daemon -PdisablePreDex --build-cache --stacktrace
+        - run:
+            name: Apk info
+            command: |
+              apk=$(find ~/popmovie/app/build/outputs/apk/ -name '*.apk' -print -quit)
+              echo $apk
+              apkanalyzer dex references $apk
+        - *share_workflow
+        - *persist_to_workspace
+        - *store_artifacts
+        - *store_report
+        - deploy:
+            name: "Deploy to Production build to Fabric"
+            command: |
+              echo "Branch: ${CIRCLE_BRANCH} , PR: ${CIRCLE_PULL_REQUEST}"
+              ./gradlew crashlyticsUploadDistributionProductionRelease --no-daemon
+
 
 workflows:
   version: 2
@@ -193,3 +265,23 @@ workflows:
             branches:
               only:
                 - develop
+
+  staging:
+    jobs:
+      - build_staging:
+          filters:
+            branches:
+              only:
+                - staging
+                - alpha
+                - /^staging/.*/
+                - /^alpha/.*/
+
+  staging:
+    jobs:
+      - build_development:
+          filters:
+            branches:
+              only:
+                - release
+                - /^release/.*/
