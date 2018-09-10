@@ -149,34 +149,34 @@ jobs:
       - run:
           name: Release notes
           command: |
-          if [ "${CIRCLE_BRANCH}" == "develop" ] ; then
-            appVersion=$(grep appVersionString build.gradle | sed -e 's/ //g;s/.*appVersionString="//;s/".*//g')
-            appVersionNumber=$(grep appVersionCode build.gradle | sed -e 's/[^0-9]//g')
-            mkdir ~/popmovie/notes
-            git log --pretty=format:"%s // %an" --since=3.weeks >> ~/popmovie/notes/$appVersion-$appVersionNumber
-          fi
-     - *share_workflow
-     - *persist_to_workspace
-     - *store_artifacts
-     - *store_report
+            if [ "${CIRCLE_BRANCH}" == "develop" ] ; then
+              appVersion=$(grep appVersionString build.gradle | sed -e 's/ //g;s/.*appVersionString="//;s/".*//g')
+              appVersionNumber=$(grep appVersionCode build.gradle | sed -e 's/[^0-9]//g')
+              mkdir ~/popmovie/notes
+              git log --pretty=format:"%s // %an" --since=3.weeks >> ~/popmovie/notes/$appVersion-$appVersionNumber
+            fi
+      - *share_workflow
+      - *persist_to_workspace
+      - *store_artifacts
+      - *store_report
 
   deploy:
-      <<: *android_config
-      steps:
-        - deploy:
-            name: "Deploy to Fabric Beta"
-            command: |
-              echo "Branch: ${CIRCLE_BRANCH} , PR: ${CIRCLE_PULL_REQUEST}"
-              if [ "${CIRCLE_BRANCH}" == "staging"* ] || [ "${CIRCLE_BRANCH}" == "alpha"* ] ; then
-                ./gradlew crashlyticsUploadDistributionStagingRelease -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --no-daemon
+    <<: *android_config
+    steps:
+      - deploy:
+          name: "Deploy to Fabric Beta"
+          command: |
+            echo "Branch: ${CIRCLE_BRANCH} , PR: ${CIRCLE_PULL_REQUEST}"
+            if [ "${CIRCLE_BRANCH}" == "staging"* ] || [ "${CIRCLE_BRANCH}" == "alpha"* ] ; then
+              ./gradlew crashlyticsUploadDistributionStagingRelease -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --no-daemon
 
-              elif [ "${CIRCLE_BRANCH}" == "master" ] || [ "${CIRCLE_BRANCH}" == "release"* ] ; then
-                ./gradlew crashlyticsUploadDistributionProductionRelease --no-daemon
+            elif [ "${CIRCLE_BRANCH}" == "master" ] || [ "${CIRCLE_BRANCH}" == "release"* ] ; then
+              ./gradlew crashlyticsUploadDistributionProductionRelease --no-daemon
 
-              else
-                ./gradlew crashlyticsUploadDistributionDevDebug -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --no-daemon
+            else
+              ./gradlew crashlyticsUploadDistributionDevDebug -PBUILD_NUMBER=$CIRCLE_BUILD_NUM --no-daemon
 
-              fi
+            fi
 
 workflows:
   version: 2
