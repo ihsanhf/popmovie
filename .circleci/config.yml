@@ -110,7 +110,6 @@ jobs:
       - *save_gradle_cache
 
   test:
-    <<: *android_config
     steps:
       - *restore_gradle_cache
       - run:
@@ -128,7 +127,6 @@ jobs:
             fi
 
   build:
-    <<: *android_config
     steps:
       - *restore_gradle_cache
       - run:
@@ -152,7 +150,6 @@ jobs:
             apkanalyzer dex references $apk
 
   artifacts:
-    <<: *android_config
     steps:
       - *restore_gradle_cache
       - run:
@@ -170,7 +167,6 @@ jobs:
       - *store_report
 
   deploy:
-    <<: *android_config
     steps:
       - *restore_gradle_cache
       - deploy:
